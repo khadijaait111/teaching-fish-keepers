@@ -5,7 +5,11 @@ import { AuthProvider } from "../contexts/AuthContext";
 import { useAuth } from "./useAuth";
 
 // Mock the auth API
-vi.mock("../api/auth");
+vi.mock("../api/auth", () => ({
+	login: vi.fn(),
+	checkAuth: vi.fn(),
+	logout: vi.fn(),
+}));
 
 describe("useAuth", () => {
 	beforeEach(() => {
