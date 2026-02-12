@@ -3,10 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "../contexts/AuthContext";
 import { useAuth } from "./useAuth";
 
-// Mock the auth API - hoisted mocks
-const mockLogin = vi.fn();
-const mockCheckAuth = vi.fn();
-const mockLogout = vi.fn();
+// Mock the auth API - hoisted mocks using vi.hoisted()
+const { mockLogin, mockCheckAuth, mockLogout } = vi.hoisted(() => ({
+	mockLogin: vi.fn(),
+	mockCheckAuth: vi.fn(),
+	mockLogout: vi.fn(),
+}));
 
 vi.mock("../api/auth", () => ({
 	login: mockLogin,
