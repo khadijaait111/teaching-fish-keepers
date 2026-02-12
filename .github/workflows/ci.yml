@@ -50,7 +50,7 @@ jobs:
       - name: Check code formatting and linting
         run: |
           cd ..
-          bunx biome check --write=false frontend/
+          bunx biome check frontend/
 
       - name: Run ESLint
         run: bun run lint
@@ -101,7 +101,7 @@ jobs:
       - name: Check code formatting and linting
         run: |
           cd ..
-          bunx biome check --write=false backend/
+          bunx biome check backend/
 
       - name: Run tests
         run: bun test
