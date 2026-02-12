@@ -1,14 +1,17 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import * as authApi from "../api/auth";
 import { AuthProvider } from "../contexts/AuthContext";
 import { useAuth } from "./useAuth";
 
-// Mock the auth API
+// Mock the auth API - hoisted mocks
+const mockLogin = vi.fn();
+const mockCheckAuth = vi.fn();
+const mockLogout = vi.fn();
+
 vi.mock("../api/auth", () => ({
-	login: vi.fn(),
-	checkAuth: vi.fn(),
-	logout: vi.fn(),
+	login: mockLogin,
+	checkAuth: mockCheckAuth,
+	logout: mockLogout,
 }));
 
 describe("useAuth", () => {
@@ -29,7 +32,7 @@ describe("useAuth", () => {
 	});
 
 	it("should return auth context when used within AuthProvider", async () => {
-		vi.mocked(authApi.checkAuth).mockResolvedValue({ authenticated: false });
+		mockCheckAuth.mockResolvedValue({ authenticated: false });
 
 		const { result } = renderHook(() => useAuth(), {
 			wrapper: AuthProvider,
@@ -49,7 +52,7 @@ describe("useAuth", () => {
 	it("should initialize with token from localStorage if authenticated", async () => {
 		const token = "stored-token-123";
 		localStorage.setItem("club_poisson_token", token);
-		vi.mocked(authApi.checkAuth).mockResolvedValue({ authenticated: true });
+		mockCheckAuth.mockResolvedValue({ authenticated: true });
 
 		const { result } = renderHook(() => useAuth(), {
 			wrapper: AuthProvider,
@@ -61,13 +64,13 @@ describe("useAuth", () => {
 		});
 
 		expect(result.current.isAuthenticated).toBe(true);
-		expect(authApi.checkAuth).toHaveBeenCalledWith(token);
+		expect(mockCheckAuth).toHaveBeenCalledWith(token);
 	});
 
 	it("should remove invalid token from localStorage", async () => {
 		const token = "invalid-token";
 		localStorage.setItem("club_poisson_token", token);
-		vi.mocked(authApi.checkAuth).mockResolvedValue({ authenticated: false });
+		mockCheckAuth.mockResolvedValue({ authenticated: false });
 
 		const { result } = renderHook(() => useAuth(), {
 			wrapper: AuthProvider,
@@ -84,8 +87,8 @@ describe("useAuth", () => {
 
 	it("should handle login successfully", async () => {
 		const token = "new-token-456";
-		vi.mocked(authApi.checkAuth).mockResolvedValue({ authenticated: false });
-		vi.mocked(authApi.login).mockResolvedValue({ token });
+		mockCheckAuth.mockResolvedValue({ authenticated: false });
+		mockLogin.mockResolvedValue({ token });
 
 		const { result } = renderHook(() => useAuth(), {
 			wrapper: AuthProvider,
@@ -110,8 +113,8 @@ describe("useAuth", () => {
 
 	it("should handle login failure", async () => {
 		const errorMessage = "Invalid password";
-		vi.mocked(authApi.checkAuth).mockResolvedValue({ authenticated: false });
-		vi.mocked(authApi.login).mockResolvedValue({ error: errorMessage });
+		mockCheckAuth.mockResolvedValue({ authenticated: false });
+		mockLogin.mockResolvedValue({ error: errorMessage });
 
 		const { result } = renderHook(() => useAuth(), {
 			wrapper: AuthProvider,
@@ -131,8 +134,8 @@ describe("useAuth", () => {
 	it("should handle logout", async () => {
 		const token = "token-to-logout";
 		localStorage.setItem("club_poisson_token", token);
-		vi.mocked(authApi.checkAuth).mockResolvedValue({ authenticated: true });
-		vi.mocked(authApi.logout).mockResolvedValue(undefined);
+		mockCheckAuth.mockResolvedValue({ authenticated: true });
+		mockLogout.mockResolvedValue(undefined);
 
 		const { result } = renderHook(() => useAuth(), {
 			wrapper: AuthProvider,
@@ -152,6 +155,6 @@ describe("useAuth", () => {
 		});
 		expect(result.current.isAuthenticated).toBe(false);
 		expect(localStorage.getItem("club_poisson_token")).toBeNull();
-		expect(authApi.logout).toHaveBeenCalledWith(token);
+		expect(mockLogout).toHaveBeenCalledWith(token);
 	});
 });
