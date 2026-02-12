@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { deleteEvent, listEvents } from "../api/events";
 import type { Event } from "../types";
@@ -7,7 +7,7 @@ export default function AdminEventsPage() {
 	const [events, setEvents] = useState<Event[]>([]);
 	const [loading, setLoading] = useState(true);
 
-	async function loadEvents() {
+	const loadEvents = useCallback(async () => {
 		setLoading(true);
 		try {
 			const data = await listEvents(true);
@@ -17,11 +17,11 @@ export default function AdminEventsPage() {
 		} finally {
 			setLoading(false);
 		}
-	}
+	}, []);
 
 	useEffect(() => {
 		loadEvents();
-	}, []);
+	}, [loadEvents]);
 
 	async function handleDelete(id: number) {
 		if (!confirm("Supprimer cet événement ?")) return;
