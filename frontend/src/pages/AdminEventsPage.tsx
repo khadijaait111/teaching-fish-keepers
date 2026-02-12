@@ -6,28 +6,27 @@ import type { Event } from "../types";
 export default function AdminEventsPage() {
 	const [events, setEvents] = useState<Event[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [_refreshKey, setRefreshKey] = useState(0);
+
+	async function loadEvents() {
+		setLoading(true);
+		try {
+			const data = await listEvents(true);
+			setEvents(data);
+		} catch (error) {
+			console.error(error);
+		} finally {
+			setLoading(false);
+		}
+	}
 
 	useEffect(() => {
-		let cancelled = false;
-		setLoading(true);
-		listEvents(true)
-			.then((data) => {
-				if (!cancelled) setEvents(data);
-			})
-			.catch(console.error)
-			.finally(() => {
-				if (!cancelled) setLoading(false);
-			});
-		return () => {
-			cancelled = true;
-		};
-	}, [_refreshKey]);
+		loadEvents();
+	}, []);
 
 	async function handleDelete(id: number) {
 		if (!confirm("Supprimer cet événement ?")) return;
 		await deleteEvent(id);
-		setRefreshKey((k) => k + 1);
+		await loadEvents();
 	}
 
 	return (

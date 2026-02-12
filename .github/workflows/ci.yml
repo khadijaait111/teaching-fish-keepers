@@ -65,6 +65,29 @@ jobs:
       run:
         working-directory: ./backend
 
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: clubpoisson
+          POSTGRES_PASSWORD: clubpoisson
+          POSTGRES_DB: clubpoisson
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGDATABASE: clubpoisson
+      PGUSER: clubpoisson
+      PGPASSWORD: clubpoisson
+      ADMIN_PASSWORD: test-password
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -103,6 +126,26 @@ jobs:
           cd ..
           bunx biome check backend/
 
+      - name: Start backend server
+        run: |
+          cd ..
+          bun run backend/src/index.ts &
+          sleep 5
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGDATABASE: clubpoisson
+          PGUSER: clubpoisson
+          PGPASSWORD: clubpoisson
+          ADMIN_PASSWORD: test-password
+
       - name: Run tests
         run: bun test
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGDATABASE: clubpoisson
+          PGUSER: clubpoisson
+          PGPASSWORD: clubpoisson
+          ADMIN_PASSWORD: test-password
 
