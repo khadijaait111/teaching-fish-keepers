@@ -1,4 +1,4 @@
-import sql from "../db/connection.ts";
+import sql from "../db/connection";
 import type { Event, EventInput } from "../types.ts";
 
 export async function listEvents(all = false): Promise<Event[]> {
