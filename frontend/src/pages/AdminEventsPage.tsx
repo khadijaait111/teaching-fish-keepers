@@ -10,6 +10,7 @@ export default function AdminEventsPage() {
 
 	useEffect(() => {
 		let cancelled = false;
+		setLoading(true);
 		listEvents(true)
 			.then((data) => {
 				if (!cancelled) setEvents(data);
@@ -21,7 +22,7 @@ export default function AdminEventsPage() {
 		return () => {
 			cancelled = true;
 		};
-	}, []);
+	}, [_refreshKey]);
 
 	async function handleDelete(id: number) {
 		if (!confirm("Supprimer cet événement ?")) return;
