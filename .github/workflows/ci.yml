@@ -40,10 +40,12 @@ jobs:
             ${{ runner.os }}-frontend-
 
       - name: Install root dependencies
-        run: bun install --frozen-lockfile
+        run: |
+          cd ..
+          bun install --frozen-lockfile
 
       - name: Install frontend dependencies
-        run: cd frontend && bun install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Check code formatting and linting
         run: |
@@ -89,10 +91,12 @@ jobs:
             ${{ runner.os }}-backend-
 
       - name: Install root dependencies
-        run: bun install --frozen-lockfile
+        run: |
+          cd ..
+          bun install --frozen-lockfile
 
       - name: Install backend dependencies
-        run: cd backend && bun install --frozen-lockfile
+        run: bun install --frozen-lockfile
 
       - name: Check code formatting and linting
         run: |
