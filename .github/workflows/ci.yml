@@ -1,0 +1,185 @@
+name: CI
+
+permissions:
+  contents: read
+  packages: write
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  frontend:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache root dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-root-
+
+      - name: Cache frontend dependencies
+        uses: actions/cache@v4
+        with:
+          path: frontend/node_modules
+          key: ${{ runner.os }}-frontend-${{ hashFiles('frontend/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-frontend-
+
+      - name: Install root dependencies
+        run: |
+          cd ..
+          bun install --frozen-lockfile
+
+      - name: Install frontend dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check code formatting and linting (Biome)
+        run: |
+          cd ..
+          bunx biome check frontend/
+
+      - name: Run tests
+        run: bun run test
+
+  backend:
+    name: Backend CI
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: clubpoisson
+          POSTGRES_PASSWORD: clubpoisson
+          POSTGRES_DB: clubpoisson
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      PGHOST: localhost
+      PGPORT: 5432
+      PGDATABASE: clubpoisson
+      PGUSER: clubpoisson
+      PGPASSWORD: clubpoisson
+      ADMIN_PASSWORD: test-password
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Cache root dependencies
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-root-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-root-
+
+      - name: Cache backend dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/node_modules
+          key: ${{ runner.os }}-backend-${{ hashFiles('backend/bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-backend-
+
+      - name: Install root dependencies
+        run: |
+          cd ..
+          bun install --frozen-lockfile
+
+      - name: Install backend dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Check code formatting and linting (Biome)
+        run: |
+          cd ..
+          bunx biome check backend/
+
+      - name: Start backend server
+        run: |
+          cd ..
+          bun run backend/src/index.ts &
+          sleep 5
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGDATABASE: clubpoisson
+          PGUSER: clubpoisson
+          PGPASSWORD: clubpoisson
+          ADMIN_PASSWORD: test-password
+
+      - name: Run tests
+        run: bun test
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGDATABASE: clubpoisson
+          PGUSER: clubpoisson
+          PGPASSWORD: clubpoisson
+          ADMIN_PASSWORD: test-password
+
+  docker-build:
+    name: Build & Push Docker Images
+    needs: [frontend, backend]
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/backend:latest
+            ghcr.io/${{ github.repository }}/backend:${{ github.sha }}
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}/frontend:latest
+            ghcr.io/${{ github.repository }}/frontend:${{ github.sha }}

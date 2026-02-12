@@ -1,16 +1,17 @@
 {
-  "name": "club-poisson-backend",
-  "version": "0.1.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "bun run --watch src/index.ts",
-    "start": "bun run src/index.ts"
-  },
-  "devDependencies": {
-    "bun-types": "^1.3.9"
-  },
-  "dependencies": {
-    "postgres": "^3.4.8"
-  }
+	"name": "club-poisson-backend",
+	"version": "0.1.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "bun run --watch src/index.ts",
+		"start": "bun run src/index.ts",
+		"test": "bun test"
+	},
+	"devDependencies": {
+		"bun-types": "^1.3.9"
+	},
+	"dependencies": {
+		"postgres": "^3.4.8"
+	}
 }
