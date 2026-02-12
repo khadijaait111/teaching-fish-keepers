@@ -1,20 +1,22 @@
-import sql from "../db/connection.ts";
+import sql from "../db/connection";
 import type { Event, EventInput } from "../types.ts";
 
 export async function listEvents(all = false): Promise<Event[]> {
-  if (all) {
-    return sql<Event[]>`SELECT * FROM events ORDER BY date ASC`;
-  }
-  return sql<Event[]>`SELECT * FROM events WHERE date >= NOW() ORDER BY date ASC`;
+	if (all) {
+		return sql<Event[]>`SELECT * FROM events ORDER BY date ASC`;
+	}
+	return sql<
+		Event[]
+	>`SELECT * FROM events WHERE date >= NOW() ORDER BY date ASC`;
 }
 
 export async function getEvent(id: number): Promise<Event | undefined> {
-  const rows = await sql<Event[]>`SELECT * FROM events WHERE id = ${id}`;
-  return rows[0];
+	const rows = await sql<Event[]>`SELECT * FROM events WHERE id = ${id}`;
+	return rows[0];
 }
 
 export async function createEvent(input: EventInput): Promise<Event> {
-  const rows = await sql<Event[]>`
+	const rows = await sql<Event[]>`
     INSERT INTO events (title, description, date, end_date, location, image_url, max_participants)
     VALUES (
       ${input.title},
@@ -27,14 +29,14 @@ export async function createEvent(input: EventInput): Promise<Event> {
     )
     RETURNING *
   `;
-  return rows[0];
+	return rows[0];
 }
 
 export async function updateEvent(
-  id: number,
-  input: EventInput,
+	id: number,
+	input: EventInput,
 ): Promise<Event | undefined> {
-  const rows = await sql<Event[]>`
+	const rows = await sql<Event[]>`
     UPDATE events SET
       title = ${input.title},
       description = ${input.description ?? ""},
@@ -47,10 +49,10 @@ export async function updateEvent(
     WHERE id = ${id}
     RETURNING *
   `;
-  return rows[0];
+	return rows[0];
 }
 
 export async function deleteEvent(id: number): Promise<boolean> {
-  const rows = await sql`DELETE FROM events WHERE id = ${id} RETURNING id`;
-  return rows.length > 0;
+	const rows = await sql`DELETE FROM events WHERE id = ${id} RETURNING id`;
+	return rows.length > 0;
 }
